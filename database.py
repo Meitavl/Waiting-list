@@ -10,9 +10,9 @@ class Db:
         database="maccabi"
     )
 
-    def __init__(self):
+    def __init__(self, table=None):
         self.my_cursor = self.mydb.cursor(buffered=True)
-        self.table = None
+        self.table = table
 
         # my_cursor.execute('CREATE DATABASE maccabi')
         # my_cursor.execute('SHOW DATABASES')
@@ -42,9 +42,16 @@ class Db:
         self.my_cursor.execute('SHOW TABLES')
         return self.my_cursor.fetchall()
 
+    def filter(self, cond):
+        self.my_cursor.execute(f'SELECT * FROM {self.table} WHERE {cond}')
+        return self.my_cursor.fetchall()
+
     def __repr__(self):
         return f'Table: {self.table}'
 
-# db = Db()
-# db.create_table('test')
+
+db = Db(table='macc')
+# db.create_table('macc')
 # db.drop_table('test')
+# for row in db.filter('day > 15'):
+#     print(row)

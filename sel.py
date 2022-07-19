@@ -96,6 +96,7 @@ def main():
     driver = webdriver.Chrome(service=s)
     driver.get(data.login_page)
     driver.maximize_window()
+    driver.minimize_window()
     print(driver.title)
 
     # time.sleep(1)
