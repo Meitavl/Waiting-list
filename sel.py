@@ -6,10 +6,12 @@ import time
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 import csv
+import os.path
 
 import data
 import gui
 import database
+import user_gui
 
 
 heb_to_eng = {
@@ -96,15 +98,23 @@ def main():
     driver = webdriver.Chrome(service=s)
     driver.get(data.login_page)
     driver.maximize_window()
-    driver.minimize_window()
+
     print(driver.title)
+
+    if not os.path.isfile('userdata.csv'):
+        user = user_gui.Screen('Auth')
 
     # time.sleep(1)
     driver.implicitly_wait(20)
 
+    # Getting user data from file
+    with open('userdata.csv', 'r') as f:
+        reader = csv.reader(f)
+        user_data = list(reader)[0]
+
     driver.find_element(By.LINK_TEXT, 'כניסה עם סיסמה').click()
-    driver.find_element(By.ID, 'identifyWithPasswordCitizenId').send_keys(data.user)
-    driver.find_element(By.ID, 'password').send_keys(data.password)
+    driver.find_element(By.ID, 'identifyWithPasswordCitizenId').send_keys(user_data[0])
+    driver.find_element(By.ID, 'password').send_keys(user_data[1])
     # time.sleep(1)
     driver.find_element(By.XPATH, '//*[@id="IdentifyWithPassword"]/button').click()
     time.sleep(1)
@@ -118,8 +128,13 @@ def main():
 
 
     # WebDriverWait(driver, 120).until(ec.element_located_to_be_selected(By.XPATH('//*[@id="SearchButton"]')))
-
-    gui.main(driver)
+    if not os.path.isfile('userdata.csv'):
+        gui.main(driver)
+    else:
+        with open('userdata.csv') as f:
+            reader = list(csv.reader(f))[2]
+            tup = reader
+        data_s(tup[0], driver)
 
     driver.find_element(By.XPATH, '// *[ @ id = "SearchButton"]').click()
     time.sleep(2)
@@ -137,6 +152,8 @@ def main():
         year = re.findall('[0-9]+', month.text)[0]
         month = re.findall('[א-ת]+', month.text)[0]
         month = heb_to_eng[month]
+        if month > int(tup[2][5:7]):
+            break
 
 
 
@@ -160,7 +177,7 @@ def main():
         driver.find_element(By.XPATH, '//span[@class="DayPicker-NavButton DayPicker-NavButton--next"]').click() # next month
 
     driver.close()
-
+    os.remove('userdata.csv')
 
 if __name__ == '__main__':
     main()

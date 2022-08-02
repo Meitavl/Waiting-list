@@ -72,7 +72,7 @@ def input_data(string, web_page):
 
 def save_data(gui):
 
-    with open('data.csv', 'w') as f:
+    with open('userdata.csv', 'a') as f:
         writer = csv.writer(f)
         doc_name = gui.doc_entry.get()
         start_date = gui.date_start.get_date()
