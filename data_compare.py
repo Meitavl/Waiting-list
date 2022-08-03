@@ -26,7 +26,8 @@ def data_comp_func(num_res: int) -> (list, dt, dt):
 
 def compare() -> None:
     free, end_date, start_date = data_comp_func(20)
-    msg = 'We found free queue:\n'
+    msg_head = 'We found free queue:\n'
+    msg = ""
     if len(free) > 0:
         for line in free:
             tmp = ''
@@ -36,9 +37,13 @@ def compare() -> None:
             time = dt.strptime(tmp, '%Y-%m-%d-%H:%M-')
             if end_date.date() >= time.date() >= start_date.date():
                 msg += f'Date: {str(time.date())}, Time: {str(time.time())}\n'
-
-        # send_email('meitav.livne@gmail.com', msg)
-        print(f'{msg}Time: {dt.now()}')
+        if len(msg) > 1:
+            msg = msg_head + msg
+            send_email('meitav.livne@gmail.com', msg)
+            # print(f'{msg}Time: {dt.now()}')
+        else:
+            pass
+        # print(f'Sorry there is not free queue yet: {dt.now()}')
     else:
         print(f'Sorry there is not free queue yet: {dt.now()}')
     return

@@ -32,6 +32,8 @@ heb_to_eng = {
     'דצמבר': 12,
 }
 
+count = 0
+count_miss = 0
 
 def data_s(string: str, web_page: webdriver) -> list:
 
@@ -108,6 +110,7 @@ def main() -> None:
     # Starting Chrome window
     s = Service(ChromeDriverManager().install())
     options = webdriver.ChromeOptions()
+    options.add_argument("--log-level=3")
     options.add_argument("--window-size=3840,2160")  # Big Chrome window for seeing all buttons
     options.add_argument("--window-position=-10000,0")  # Position to working in the background
     driver = webdriver.Chrome(service=s, options=options)
@@ -203,4 +206,14 @@ if __name__ == '__main__':
             main()
         except:
             print(f'Problem with program {dt.now()}')
-        time.sleep(30)  # Running app every 15 minutes
+            count_miss += 1
+        break_time = 900  # Running app every 15 minutes
+        count += 1
+        with open('log.csv', 'a') as f:
+            writer = csv.writer(f)
+            if count == 1:
+                heading = ('Count', 'Time', 'Count miss')
+                writer.writerow(heading)
+            tup = (count, dt.now(), count_miss)
+            writer.writerow(tup)
+        time.sleep(break_time)
