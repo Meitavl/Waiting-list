@@ -1,3 +1,5 @@
 
 *.csv
 test.py
+out
+*.out
