@@ -14,8 +14,8 @@ class Db:
         self.my_cursor = self.mydb.cursor(buffered=True)
         self.table = table
 
-        # my_cursor.execute('CREATE DATABASE maccabi')
-        # my_cursor.execute('SHOW DATABASES')
+        # self.my_cursor.execute('CREATE DATABASE maccabi')
+        # self.my_cursor.execute('SHOW DATABASES')
 
     def insert_to_table(self, data: tuple) -> None:
         sql_stuff = f'INSERT INTO {self.table}(year, month, day, hour) VALUES (%s, %s, %s, %s)'
@@ -50,7 +50,7 @@ class Db:
 
 
 db = Db(table='macc')
-# db.create_table('macc')
+db.create_table('macc')
 # db.drop_table('test')
 # for row in db.filter('day > 15'):
 #     print(row)

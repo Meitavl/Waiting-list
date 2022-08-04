@@ -4,7 +4,6 @@ from tkinter import *
 
 class Screen:
 
-
     def __init__(self, user):
 
         self.entry = []

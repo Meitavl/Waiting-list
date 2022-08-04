@@ -9,6 +9,7 @@ import csv
 import os.path
 from datetime import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
+import sys
 
 import data
 import gui
@@ -115,8 +116,7 @@ def main() -> None:
     options.add_argument("--window-position=-10000,0")  # Position to working in the background
     driver = webdriver.Chrome(service=s, options=options)
     driver.get(data.login_page)
-    # driver.set_window_size(3840, 2160)  # TODO Delete
-    # driver.set_window_position(-10_000, 0)  # TODO Delete
+
 
     print(f'Program running in: \"{driver.title}\"')
 
@@ -202,18 +202,22 @@ def main() -> None:
 
 if __name__ == '__main__':
     while True:
+        exc = ''
         try:
             main()
         except:
+            exc = sys.exc_info()
+            print(exc[0])
+            exc = exc[0]
             print(f'Problem with program {dt.now()}')
             count_miss += 1
-        break_time = 900  # Running app every 15 minutes
+        break_time = 20  # Running app every 15 minutes
         count += 1
         with open('log.csv', 'a') as f:
             writer = csv.writer(f)
             if count == 1:
-                heading = ('Count', 'Time', 'Count miss')
+                heading = ('Count', 'Time', 'Count miss', 'Exception')
                 writer.writerow(heading)
-            tup = (count, dt.now(), count_miss)
+            tup = (count, dt.now(), count_miss, exc)
             writer.writerow(tup)
         time.sleep(break_time)
