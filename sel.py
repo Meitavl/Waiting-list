@@ -16,6 +16,7 @@ import gui
 import database
 import user_gui
 import data_compare
+import main_gui
 from email_send import send_email
 
 heb_to_eng = {
@@ -33,8 +34,7 @@ heb_to_eng = {
     'דצמבר': 12,
 }
 
-count = 0
-count_miss = 0
+
 
 def data_s(string: str, web_page: webdriver) -> list:
 
@@ -57,7 +57,7 @@ def save_time(year: int, month: int, doc_cal: list, driver: webdriver, i: int, d
         driver.implicitly_wait(0.2)
 
         # Morning calender
-        WebDriverWait(driver, 2).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
+        WebDriverWait(driver, 3).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
         driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]').click()
         hours_cal = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
         for item in hours_cal:
@@ -98,7 +98,7 @@ def month_queue(year: int, month: int, day: int, hours: list, i: int, db: databa
             db.insert_to_table(tup)
 
 
-def main() -> None:
+def main(gui_main) -> None:
     '''
     התוכנה יוצרה לטובת עזרה במציאת תור פנוי בשירותי הבריאות מכבי.
     ניתן לבצע בדיקה לפי שם רופא.
@@ -111,7 +111,6 @@ def main() -> None:
     # Starting Chrome window
     s = Service(ChromeDriverManager().install())
     options = webdriver.ChromeOptions()
-    options.add_argument("--log-level=3")
     options.add_argument("--window-size=3840,2160")  # Big Chrome window for seeing all buttons
     options.add_argument("--window-position=-10000,0")  # Position to working in the background
     driver = webdriver.Chrome(service=s, options=options)
@@ -120,25 +119,25 @@ def main() -> None:
 
     print(f'Program running in: \"{driver.title}\"')
 
-    if not os.path.isfile('userdata.csv'):
+    file_name = 'userdata.csv'
+    if not os.path.isfile(file_name):
         user = user_gui.Screen('Auth')  # In the first run you need to insert auth data
 
     # web page long loading
     driver.implicitly_wait(20)
 
     # Getting user data from file
-    with open('userdata.csv', 'r') as f:
-        reader = csv.reader(f)
-        user_data = list(reader)[0]
+
+    user_data = main_gui.load_data(file_name)
 
     # Auth part
     driver.find_element(By.LINK_TEXT, 'כניסה עם סיסמה').click()
-    driver.find_element(By.ID, 'identifyWithPasswordCitizenId').send_keys(user_data[0])
-    driver.find_element(By.ID, 'password').send_keys(user_data[1])
+    driver.find_element(By.ID, 'identifyWithPasswordCitizenId').send_keys(user_data[0][0])
+    driver.find_element(By.ID, 'password').send_keys(user_data[0][1])
     driver.find_element(By.XPATH, '//*[@id="IdentifyWithPassword"]/button').click()
 
-    # Navigating to doctor queue
-    time.sleep(1)  # TODO Changing to wait until reload
+    # Navigating to doctors queue
+    WebDriverWait(driver, 2).until(ec.element_to_be_clickable((By.LINK_TEXT, 'הבנתי, תודה')))
     driver.find_element(By.LINK_TEXT, 'הבנתי, תודה').click()
     driver.find_element(By.XPATH, '//*[@id="ctl00_ctl00_MainPlaceHolder_Body_wcHomeUserPersonalNavMenu_rptUserPersonalMenu_ctl00_imgOuter"]').click()
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[2]/div[2]/a[2]/button').click()
@@ -147,20 +146,17 @@ def main() -> None:
     # Getting doctor name from user
     # from the second running read name from file
     try:
-        with open('userdata.csv') as f:
-            reader = list(csv.reader(f))[2]
-            tup = reader
-            data_s(tup[0], driver)
+        if len(user_data) > 1:
+            data_s(user_data[2], driver)
     except IndexError:  # If file do not have doc name open GUI
         gui.main(driver)
-        with open('userdata.csv') as f:
-            reader = list(csv.reader(f))[2]
-            tup = reader
+        user_data = main_gui.load_data(file_name)[2]
 
-    end_date = dt.strptime(tup[2], '%Y-%m-%d %H:%M:%S')
+    gui_main.information(1,2,3, 'HHH')
+    end_date = dt.strptime(user_data[2], '%Y-%m-%d %H:%M:%S')
 
     driver.find_element(By.XPATH, '// *[ @ id = "SearchButton"]').click()
-    time.sleep(2)
+    WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a')))
     driver.find_element(By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a').click()
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button').click()
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/button').click()
@@ -210,8 +206,9 @@ if __name__ == '__main__':
             print(exc[0])
             exc = exc[0]
             print(f'Problem with program {dt.now()}')
+<<<<<<< HEAD:sel.pyw
             count_miss += 1
-        break_time = 20  # Running app every 15 minutes
+        break_time = 600  # Running app every 10 minutes
         count += 1
         with open('log.csv', 'a') as f:
             writer = csv.writer(f)
@@ -221,3 +218,6 @@ if __name__ == '__main__':
             tup = (count, dt.now(), count_miss, exc)
             writer.writerow(tup)
         time.sleep(break_time)
+=======
+        time.sleep(30)  # Running app every 15 minutes
+>>>>>>> parent of 1123387 (v1.0 Working program):sel.py
