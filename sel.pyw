@@ -54,10 +54,10 @@ def save_time(year: int, month: int, doc_cal: list, driver: webdriver, i: int, d
         free_hours = []
 
         day.click()
-        driver.implicitly_wait(0.2)
+        driver.implicitly_wait(0.1)
 
         # Morning calender
-        WebDriverWait(driver, 3).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
+        WebDriverWait(driver, 6).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
         driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]').click()
         hours_cal = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
         for item in hours_cal:
@@ -98,7 +98,7 @@ def month_queue(year: int, month: int, day: int, hours: list, i: int, db: databa
             db.insert_to_table(tup)
 
 
-def main(gui_main) -> None:
+def main(gui_main: main_gui.MainGui) -> None:
     '''
     התוכנה יוצרה לטובת עזרה במציאת תור פנוי בשירותי הבריאות מכבי.
     ניתן לבצע בדיקה לפי שם רופא.
@@ -119,15 +119,11 @@ def main(gui_main) -> None:
 
     print(f'Program running in: \"{driver.title}\"')
 
-    file_name = 'userdata.csv'
-    if not os.path.isfile(file_name):
-        user = user_gui.Screen('Auth')  # In the first run you need to insert auth data
-
     # web page long loading
     driver.implicitly_wait(20)
 
     # Getting user data from file
-
+    file_name = 'userdata.csv'
     user_data = main_gui.load_data(file_name)
 
     # Auth part
@@ -145,19 +141,16 @@ def main(gui_main) -> None:
 
     # Getting doctor name from user
     # from the second running read name from file
-    try:
-        if len(user_data) > 1:
-            data_s(user_data[2], driver)
-    except IndexError:  # If file do not have doc name open GUI
-        gui.main(driver)
-        user_data = main_gui.load_data(file_name)[2]
 
-    gui_main.information(1,2,3, 'HHH')
-    end_date = dt.strptime(user_data[2], '%Y-%m-%d %H:%M:%S')
+    if gui_main.entry['doc_name'].get() == '':
+        gui.main(gui_main, driver)
+    else:
+        data_s(gui_main.entry['doc_name'].get(), driver)
 
     driver.find_element(By.XPATH, '// *[ @ id = "SearchButton"]').click()
     WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a')))
     driver.find_element(By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a').click()
+    WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button')))
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button').click()
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/button').click()
 
@@ -172,6 +165,7 @@ def main(gui_main) -> None:
         month = re.findall('[א-ת]+', month.text)[0]
         month = heb_to_eng[month]
         date = dt.strptime(f'{year}/{str(month)}/1', '%Y/%m/%d')
+        end_date = dt.strptime(gui_main.entry['end_date'].get(), '%Y-%m-%d %H:%M:%S')
         if (date.year > end_date.year) or (date.month > end_date.month and date.year == end_date.year):
             break
 
@@ -180,7 +174,6 @@ def main(gui_main) -> None:
         try:
             doc_calender = driver.find_element(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available DayPicker-Day--selected"]')
             free_days.append(doc_calender)
-            # save_time(date.year, date.month, free_days, driver, i, db)
             doc_calender1 = driver.find_elements(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available"]')
             free_days.extend(doc_calender1)
 
@@ -193,10 +186,13 @@ def main(gui_main) -> None:
 
     driver.close()
 
-    data_compare.compare()
+
     # os.remove('userdata.csv')
 
+
 if __name__ == '__main__':
+    count_miss = 0
+    count = 0
     while True:
         exc = ''
         try:
@@ -206,7 +202,7 @@ if __name__ == '__main__':
             print(exc[0])
             exc = exc[0]
             print(f'Problem with program {dt.now()}')
-<<<<<<< HEAD:sel.pyw
+
             count_miss += 1
         break_time = 600  # Running app every 10 minutes
         count += 1
@@ -217,7 +213,6 @@ if __name__ == '__main__':
                 writer.writerow(heading)
             tup = (count, dt.now(), count_miss, exc)
             writer.writerow(tup)
-        time.sleep(break_time)
-=======
-        time.sleep(30)  # Running app every 15 minutes
->>>>>>> parent of 1123387 (v1.0 Working program):sel.py
+        time.sleep(break_time)  # Running app every 10 minutes
+
+

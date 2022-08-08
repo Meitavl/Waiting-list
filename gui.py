@@ -3,11 +3,14 @@ from tkinter import *
 from tkcalendar import DateEntry
 import datetime as dt
 import sel
+import main_gui
+
+import main_gui
 
 
 class Gui1:
 
-    def __init__(self, master, web_page):
+    def __init__(self, master, web_page, data: main_gui.MainGui):
 
         self.web_page = web_page
 
@@ -22,7 +25,7 @@ class Gui1:
         self.doc_list = Listbox(master, width=50)
         self.doc_list.grid(row=1, column=1, pady=10)
 
-        self.my_button = Button(master, text='send', command=self.send)
+        self.my_button = Button(master, text='send', command=lambda: self.send(data))
         self.my_button.grid(row=2, column=1)
 
         self.date_start = DateEntry(master, selectmode='day')
@@ -33,8 +36,13 @@ class Gui1:
 
         self.binding()
 
-    def send(self):
-        save_data(self)
+    def send(self, data: main_gui.MainGui):
+
+        start_date = dt.datetime.fromisoformat(str(self.date_start.get_date()))
+        end_date = dt.datetime.fromisoformat(str(self.date_end.get_date()))
+
+        data.information(doc_name=self.doc_entry.get(), start_date=start_date, end_date=end_date)
+        # save_data(self)
         self.master.destroy()
         return
 
@@ -82,7 +90,7 @@ def save_data(gui):
         writer.writerow((doc_name, start_date, end_date))
 
 
-def main(web_page=0):
+def main(data: main_gui.MainGui, *args):
 
     app_width = 500
     app_height = 300
@@ -99,7 +107,7 @@ def main(web_page=0):
     root.lift()
     root.attributes("-topmost", True)
 
-    g = Gui1(root, web_page)
+    g = Gui1(root, args[0], data)
     root.mainloop()
 
 

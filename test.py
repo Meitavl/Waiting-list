@@ -1,6 +1,4 @@
-string = 'f'
-print(string)
-if len(string):
-    print("string:", string.splitlines()[0], len(string))
-else:
-    print('string short')
+a = {'a': 3, 'b': 6}
+
+for e in a:
+    print(a[e])
