@@ -8,7 +8,6 @@ from datetime import datetime as dt
 import data_compare
 
 
-
 class MainGui:
 
     def __init__(self):
@@ -33,7 +32,7 @@ class MainGui:
         self.new_label('email', 2, 1, ':אימייל')
         
         # Run button
-        self.new_button('run', 3, 1, 'הפעל', command=self.run_button)
+        self.new_button('start', 3, 1, 'הפעל', command=self.run_button)
 
         # Stop button
         self.new_button('stop', 3, 0, 'עצור', command=self.stop, state=DISABLED)
@@ -88,25 +87,32 @@ class MainGui:
         self.thread['selenium'] = (threading.Thread(target=self.start_sel, daemon=True))
         self.thread['selenium'].start()
         self.button['stop'].config(state=NORMAL)
+        self.button['start'].config(state=DISABLED)
 
     def start_sel(self):
         count_miss = 0
         count = 0
         while True:
             exc = ''
-            # try:
-            sel.main(self)
-            data_compare.compare(self)
-            # except:
-            #     exc = sys.exc_info()
-            #     exc = exc[0]
-            #     print(f'Problem with program {dt.now()}')
-            #     count_miss += 1
+            try:
+                sel.main(self)
+                data_compare.compare(self)
+            except:
+                exc0, exc1, exc2 = sys.exc_info()
+                print(f'{exc0}, {exc1}, {dt.now()}')
+                trace_exp(exc2)
+                count_miss += 1
+                if str(exc1) == 'Wrong id or password':
+                    self.stop()
+                    self.entry['username'].config(state=NORMAL)
+                    self.entry['password'].config(state=NORMAL)
+                    self.entry['email'].config(state=NORMAL)
+                    break
             count += 1
 
             self.information(running_num=count, exception=count_miss)
             save_log('log.csv', count, dt.now(), count_miss, exc)
-            time.sleep(30)
+            time.sleep(15)
 
     def information(self, **kwargs):
         for key in kwargs:
@@ -116,15 +122,20 @@ class MainGui:
             self.entry[key].config(state=DISABLED)
 
     def stop(self):
-        for key in self.thread:
-            self.thread[key]._delete()
-            self.thread.pop(key)
         self.button['stop'].config(state=DISABLED)
+        self.button['start'].config(state=NORMAL)
+
 
     def shut_down(self):
-        if self.button['stop']['state'] == NORMAL:
-            self.stop()
         self.root.destroy()
+
+
+def trace_exp(exc):
+    print(exc.tb_frame, exc.tb_lineno)
+    save_log('exc_log.csv', dt.now(), exc.tb_frame, exc.tb_lineno)
+    if exc.tb_next is None:
+        return
+    trace_exp(exc.tb_next)
 
 
 def save_data(file_name, *args):

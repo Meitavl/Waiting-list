@@ -2,8 +2,8 @@ import csv
 import re
 import database
 from datetime import datetime as dt
+from email_send import send_email
 import main_gui
-
 
 
 def data_comp_func(num_res: int, data: main_gui) -> (list, dt, dt):
@@ -19,24 +19,25 @@ def data_comp_func(num_res: int, data: main_gui) -> (list, dt, dt):
 
 
 def compare(data: main_gui) -> None:
-    free = data_comp_func(20, data)
+    free = data_comp_func(5, data)
     msg = 'We found free queue:\n'
     count = 0
     if len(free) > 0:
+        start_date = dt.strptime(data.entry['start_date'].get(), '%Y-%m-%d %H:%M:%S')
+        end_date = dt.strptime(data.entry['end_date'].get(), '%Y-%m-%d %H:%M:%S')
         for line in free:
             tmp = ''
             line = re.findall('[0-9:]+', str(line))
             for word in line:
                 tmp += word + '-'
             time = dt.strptime(tmp, '%Y-%m-%d-%H:%M-')
-            start_date = dt.strptime(data.entry['start_date'].get(), '%Y-%m-%d %H:%M:%S')
-            end_date = dt.strptime(data.entry['end_date'].get(), '%Y-%m-%d %H:%M:%S')
+
             if end_date.date() >= time.date() >= start_date.date():
                 msg += f'Date: {str(time.date())}, Time: {str(time.time())}\n'
                 count += 1
 
-        # send_email('meitav.livne@gmail.com', msg)
-        if count == 0:
+        # send_email(data.entry['email'].get(), msg)
+        if count > 0:
             print(f'{msg}Time: {dt.now()}')
         if data.entry['free_queue_num'].get() == '':
             sum_count = 0

@@ -5,8 +5,6 @@ import datetime as dt
 import sel
 import main_gui
 
-import main_gui
-
 
 class Gui1:
 
@@ -16,8 +14,8 @@ class Gui1:
 
         self.master = master
 
-        myframe = Frame(master)
-        myframe.grid()
+        # myframe = Frame(master)
+        # myframe.grid()
 
         self.doc_entry = Entry(master, width=50)
         self.doc_entry.grid(row=0, column=1, pady=10, padx=10)
@@ -42,7 +40,7 @@ class Gui1:
         end_date = dt.datetime.fromisoformat(str(self.date_end.get_date()))
 
         data.information(doc_name=self.doc_entry.get(), start_date=start_date, end_date=end_date)
-        # save_data(self)
+
         self.master.destroy()
         return
 
@@ -72,7 +70,7 @@ class Gui1:
 
 def input_data(string, web_page):
     if __name__ == '__main__':
-        str_list = ['שובל', 'שיר', 'שובר', 'מיכאל']
+        str_list = ['שובל', 'שיר', 'שוכר', 'מיכאל']
         return str_list
 
     return sel.data_s(string, web_page)

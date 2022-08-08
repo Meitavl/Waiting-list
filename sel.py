@@ -6,18 +6,15 @@ import time
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 import csv
-import os.path
 from datetime import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
 import sys
 
-import data
+
 import gui
 import database
-import user_gui
-import data_compare
 import main_gui
-from email_send import send_email
+
 
 heb_to_eng = {
     'ינואר': 1,
@@ -40,7 +37,7 @@ def data_s(string: str, web_page: webdriver) -> list:
 
     web_page.find_element(By.XPATH, '//*[@id="DocName"]').clear()
     web_page.find_element(By.XPATH, '//*[@id="DocName"]').send_keys(string)
-    time.sleep(0.2)
+    time.sleep(0.1)
     doc_name = web_page.find_element(By.XPATH, '//*[@id="DocName_pop"]')
     doc_name_list = doc_name.text.splitlines()
     return doc_name_list
@@ -57,7 +54,7 @@ def save_time(year: int, month: int, doc_cal: list, driver: webdriver, i: int, d
         driver.implicitly_wait(0.1)
 
         # Morning calender
-        WebDriverWait(driver, 6).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
+        WebDriverWait(driver, 20).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
         driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]').click()
         hours_cal = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
         for item in hours_cal:
@@ -109,12 +106,14 @@ def main(gui_main: main_gui.MainGui) -> None:
     '''
 
     # Starting Chrome window
+    login_page = 'https://mac.maccabi4u.co.il/login?SAMLRequest=rZLLTsMwEEV%2FJfI%2B76RVrSaoUCEq8aggYsEGTZyhteSMg%2B3w%2BHuSFIkipK5Y%0AeOU7nnuOvLTQqo6verene3zt0Trvo1Vk%2BXRRsN4Q12Cl5QQtWu4Ef1jdXPMk%0AiHhntNNCK%2BathzlJ4KSmgu2d6ywPwxZEMBwBtcz6QOhAqlDpnSTmXWojcFpa%0AsIh5m3XBnhHnSR5HUVpDjbN00aSQQY4ifRH1PKsXQ8zaHjdkHZArWBIliR%2FN%0A%2FTiu4oznOY9mT8zbfnc6l9RI2p0GqA8hy6%2Bqautv7x6q6YE32aC5HdI%2FLJqU%0AJPyD0wCBTxDCgBKOxnykptOSXCB28qwrbJcw7xGNncwMO1m5HHN8YjFHrk83%0ABWvRjHpZ%2BQ%2BVluFRh0Ohjo%2FAm%2FVWKyk%2BvZVS%2Bv3CILhBQszC8jDy%2B6eUXw%3D%3D%0A&RelayState=https%3A%2F%2Fonline.maccabi4u.co.il&SigAlg=http%3A%2F%2Fwww.w3.org%2F2000%2F09%2Fxmldsig%23rsa-sha1&Signature=fe497N65LIjHHChurv3leAN1KDjrxgtjWhUe8LB5BC8Wmt31ayLrBXbSkjS6WkR1X7dfEsT6SVLa9Z6naoqL0k9qsk90K1eRycZfO9x1MePLr%2FFsLQW38YzjJ4bX29s0rZ4rgW2LagGgBgxGpGDWCGNss35T17MYsq7bqroxUN5WpQXPbyJmzFpyENmFbnqltAz1nqqCE0FSi82o5CWxK%2FXk9R7Zbv73yFWhyoQrASckFEjSKWze8kx1M8vBCY2%2B%2B4VCxJnFNF8e0TU4Pld4WEbXzjV4dEQiSWqidv6H1WuHRAs8m3%2FTX45m6G6ABPtXNvdAV7IIjswHaPRt8haSGQ%3D%3D'
+
     s = Service(ChromeDriverManager().install())
     options = webdriver.ChromeOptions()
     options.add_argument("--window-size=3840,2160")  # Big Chrome window for seeing all buttons
     options.add_argument("--window-position=-10000,0")  # Position to working in the background
     driver = webdriver.Chrome(service=s, options=options)
-    driver.get(data.login_page)
+    driver.get(login_page)
 
 
     print(f'Program running in: \"{driver.title}\"')
@@ -131,6 +130,9 @@ def main(gui_main: main_gui.MainGui) -> None:
     driver.find_element(By.ID, 'identifyWithPasswordCitizenId').send_keys(user_data[0][0])
     driver.find_element(By.ID, 'password').send_keys(user_data[0][1])
     driver.find_element(By.XPATH, '//*[@id="IdentifyWithPassword"]/button').click()
+
+    assert driver.find_element(By.XPATH, '//*[@id="IdentifyWithPassword"]/div[3]/div').is_displayed() == False, 'Wrong id or password'
+
 
     # Navigating to doctors queue
     WebDriverWait(driver, 2).until(ec.element_to_be_clickable((By.LINK_TEXT, 'הבנתי, תודה')))
