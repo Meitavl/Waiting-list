@@ -6,6 +6,7 @@ import csv
 import sys
 from datetime import datetime as dt
 import data_compare
+import settings
 
 
 class MainGui:
@@ -78,8 +79,8 @@ class MainGui:
         username = self.entry['username'].get()
         password = self.entry['password'].get()
         if username == 'admin' or username == 'שגצןמ':
-            username = '***REMOVED***'
-            password = '***REMOVED***'
+            username = settings.id
+            password = settings.password
         email = self.entry['email'].get()
         for key in self.entry:
             self.entry[key].config(state=DISABLED)

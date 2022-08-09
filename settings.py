@@ -1,0 +1,9 @@
+import os
+import dotenv
+
+dotenv.load_dotenv('.env')
+
+id = os.environ['id']
+password = os.environ['password']
+
+login_page = 'https://mac.maccabi4u.co.il/login?SAMLRequest=rZLLTsMwEEV%2FJfI%2B76RVrSaoUCEq8aggYsEGTZyhteSMg%2B3w%2BHuSFIkipK5Y%0AeOU7nnuOvLTQqo6verene3zt0Trvo1Vk%2BXRRsN4Q12Cl5QQtWu4Ef1jdXPMk%0AiHhntNNCK%2BathzlJ4KSmgu2d6ywPwxZEMBwBtcz6QOhAqlDpnSTmXWojcFpa%0AsIh5m3XBnhHnSR5HUVpDjbN00aSQQY4ifRH1PKsXQ8zaHjdkHZArWBIliR%2FN%0A%2FTiu4oznOY9mT8zbfnc6l9RI2p0GqA8hy6%2Bqautv7x6q6YE32aC5HdI%2FLJqU%0AJPyD0wCBTxDCgBKOxnykptOSXCB28qwrbJcw7xGNncwMO1m5HHN8YjFHrk83%0ABWvRjHpZ%2BQ%2BVluFRh0Ohjo%2FAm%2FVWKyk%2BvZVS%2Bv3CILhBQszC8jDy%2B6eUXw%3D%3D%0A&RelayState=https%3A%2F%2Fonline.maccabi4u.co.il&SigAlg=http%3A%2F%2Fwww.w3.org%2F2000%2F09%2Fxmldsig%23rsa-sha1&Signature=fe497N65LIjHHChurv3leAN1KDjrxgtjWhUe8LB5BC8Wmt31ayLrBXbSkjS6WkR1X7dfEsT6SVLa9Z6naoqL0k9qsk90K1eRycZfO9x1MePLr%2FFsLQW38YzjJ4bX29s0rZ4rgW2LagGgBgxGpGDWCGNss35T17MYsq7bqroxUN5WpQXPbyJmzFpyENmFbnqltAz1nqqCE0FSi82o5CWxK%2FXk9R7Zbv73yFWhyoQrASckFEjSKWze8kx1M8vBCY2%2B%2B4VCxJnFNF8e0TU4Pld4WEbXzjV4dEQiSWqidv6H1WuHRAs8m3%2FTX45m6G6ABPtXNvdAV7IIjswHaPRt8haSGQ%3D%3D'

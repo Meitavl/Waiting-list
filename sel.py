@@ -10,10 +10,10 @@ from datetime import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
 import sys
 
-
 import gui
 import database
 import main_gui
+import settings
 
 
 heb_to_eng = {
@@ -32,7 +32,6 @@ heb_to_eng = {
 }
 
 
-
 def data_s(string: str, web_page: webdriver) -> list:
 
     web_page.find_element(By.XPATH, '//*[@id="DocName"]').clear()
@@ -43,37 +42,44 @@ def data_s(string: str, web_page: webdriver) -> list:
     return doc_name_list
 
 
-def save_time(year: int, month: int, doc_cal: list, driver: webdriver, i: int, db: database.Db) -> None:
+def save_time(year: int, month: int, day: webdriver, driver: webdriver, i: int) -> None:
 
     driver.implicitly_wait(0.5)
 
-    for day in doc_cal:
-        free_hours = []
+    free_hours = []
 
-        day.click()
-        driver.implicitly_wait(0.1)
+    day.click()
+    driver.implicitly_wait(0.1)
 
-        # Morning calender
-        WebDriverWait(driver, 20).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
-        driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]').click()
-        hours_cal = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
-        for item in hours_cal:
-            free_hours.append(item.text)
+    # Morning calender
+    WebDriverWait(driver, 20).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
+    driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]').click()
+    mor_hours = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
+    for hour in mor_hours:
+        free_hours.append(hour)
 
-        # Noon calender
+    # Noon calender
 
-        driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[2]').click()
-        hours_cal = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
-        for item in hours_cal:
-            free_hours.append(item.text)
+    driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[2]').click()
+    noon_hours = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
+    for hour in noon_hours:
+        free_hours.append(hour)
 
-        # Evening calender
-        driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[3]').click()
-        hours_cal = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')  # Hours
-        for item in hours_cal:
-            free_hours.append(item.text)
 
-        month_queue(year, month, int(day.text), free_hours, i, db)
+    # Evening calender
+    driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[3]').click()
+    ev_hours = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')  # Hours
+    for hour in ev_hours:
+        free_hours.append(hour)
+
+    # free_hours[0].click()
+    # driver.find_element(By.XPATH,
+    #                     '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[2]/button[1]').click()
+    # driver.find_element(By.XPATH,
+    #                     '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[5]/button[1]').click()
+
+
+    month_queue(year, month, int(day.text), free_hours, i)
 
 
 def create_sql_table(name: str) -> database.Db:
@@ -82,7 +88,7 @@ def create_sql_table(name: str) -> database.Db:
     return db
 
 
-def month_queue(year: int, month: int, day: int, hours: list, i: int, db: database.Db) ->None:
+def month_queue(hours: list, *args: int,  i: int) ->None:
 
     with open('doc.csv', 'a', newline="", encoding='utf-8') as f:
         writer = csv.writer(f)
@@ -90,9 +96,9 @@ def month_queue(year: int, month: int, day: int, hours: list, i: int, db: databa
             writer.writerow(('שנה', 'חודש', 'יום', 'שעה'))
 
         for hour in hours:
-            tup = (year, month, day, hour)
+            tup = tuple(list(args).append(hour))
             writer.writerow(tup)
-            db.insert_to_table(tup)
+            # db.insert_to_table(tup)
 
 
 def main(gui_main: main_gui.MainGui) -> None:
@@ -106,17 +112,15 @@ def main(gui_main: main_gui.MainGui) -> None:
     '''
 
     # Starting Chrome window
-    login_page = 'https://mac.maccabi4u.co.il/login?SAMLRequest=rZLLTsMwEEV%2FJfI%2B76RVrSaoUCEq8aggYsEGTZyhteSMg%2B3w%2BHuSFIkipK5Y%0AeOU7nnuOvLTQqo6verene3zt0Trvo1Vk%2BXRRsN4Q12Cl5QQtWu4Ef1jdXPMk%0AiHhntNNCK%2BathzlJ4KSmgu2d6ywPwxZEMBwBtcz6QOhAqlDpnSTmXWojcFpa%0AsIh5m3XBnhHnSR5HUVpDjbN00aSQQY4ifRH1PKsXQ8zaHjdkHZArWBIliR%2FN%0A%2FTiu4oznOY9mT8zbfnc6l9RI2p0GqA8hy6%2Bqautv7x6q6YE32aC5HdI%2FLJqU%0AJPyD0wCBTxDCgBKOxnykptOSXCB28qwrbJcw7xGNncwMO1m5HHN8YjFHrk83%0ABWvRjHpZ%2BQ%2BVluFRh0Ohjo%2FAm%2FVWKyk%2BvZVS%2Bv3CILhBQszC8jDy%2B6eUXw%3D%3D%0A&RelayState=https%3A%2F%2Fonline.maccabi4u.co.il&SigAlg=http%3A%2F%2Fwww.w3.org%2F2000%2F09%2Fxmldsig%23rsa-sha1&Signature=fe497N65LIjHHChurv3leAN1KDjrxgtjWhUe8LB5BC8Wmt31ayLrBXbSkjS6WkR1X7dfEsT6SVLa9Z6naoqL0k9qsk90K1eRycZfO9x1MePLr%2FFsLQW38YzjJ4bX29s0rZ4rgW2LagGgBgxGpGDWCGNss35T17MYsq7bqroxUN5WpQXPbyJmzFpyENmFbnqltAz1nqqCE0FSi82o5CWxK%2FXk9R7Zbv73yFWhyoQrASckFEjSKWze8kx1M8vBCY2%2B%2B4VCxJnFNF8e0TU4Pld4WEbXzjV4dEQiSWqidv6H1WuHRAs8m3%2FTX45m6G6ABPtXNvdAV7IIjswHaPRt8haSGQ%3D%3D'
-
+    login_page = settings.login_page
     s = Service(ChromeDriverManager().install())
     options = webdriver.ChromeOptions()
-    options.add_argument("--window-size=3840,2160")  # Big Chrome window for seeing all buttons
+    options.add_argument("--window-size=3840,2160")  # Changing Chrome window size for seeing all buttons
     options.add_argument("--window-position=-10000,0")  # Position to working in the background
     driver = webdriver.Chrome(service=s, options=options)
     driver.get(login_page)
 
-
-    print(f'Program running in: \"{driver.title}\"')
+    # print(f'Program running in: \"{driver.title}\"')
 
     # web page long loading
     driver.implicitly_wait(20)
@@ -132,7 +136,7 @@ def main(gui_main: main_gui.MainGui) -> None:
     driver.find_element(By.XPATH, '//*[@id="IdentifyWithPassword"]/button').click()
 
     assert driver.find_element(By.XPATH, '//*[@id="IdentifyWithPassword"]/div[3]/div').is_displayed() == False, 'Wrong id or password'
-
+    print(f'Connection establish')
 
     # Navigating to doctors queue
     WebDriverWait(driver, 2).until(ec.element_to_be_clickable((By.LINK_TEXT, 'הבנתי, תודה')))
@@ -152,13 +156,17 @@ def main(gui_main: main_gui.MainGui) -> None:
     driver.find_element(By.XPATH, '// *[ @ id = "SearchButton"]').click()
     WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a')))
     driver.find_element(By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a').click()
+    # TODO if have queue
+    if driver.find_element(By.XPATH, '/html/body/div[2]/div/div[1]/div/div/div[4]/button').is_displayed():
+        #  have queue function
+        pass
     WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button')))
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button').click()
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/button').click()
 
     driver.implicitly_wait(2)
 
-    db = create_sql_table('macc')  # Open sql table (not needed, only for practice)
+    # db = create_sql_table('macc')  # Open sql table (not needed, only for practice)
 
     for i in range(1, 13):
         month = driver.find_element(By.XPATH, '//div[@class="DayPicker-Caption"]')
@@ -176,10 +184,17 @@ def main(gui_main: main_gui.MainGui) -> None:
         try:
             doc_calender = driver.find_element(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available DayPicker-Day--selected"]')
             free_days.append(doc_calender)
+            date = dt.strptime(f'{year}/{str(month)}/{day.text}', '%Y/%m/%d')
+
+
             doc_calender1 = driver.find_elements(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available"]')
             free_days.extend(doc_calender1)
 
-            save_time(date.year, date.month, free_days, driver, i, db)
+            for day in free_days:
+                date = dt.strptime(f'{year}/{str(month)}/{day.text}', '%Y/%m/%d')
+                if date > end_date:
+                    break
+                save_time(date.year, date.month, day, driver, i)
 
         except ec.NoSuchElementException:
             print(f' There is no avalibale day in {date.month} {date.year}')

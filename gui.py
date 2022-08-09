@@ -14,9 +14,6 @@ class Gui1:
 
         self.master = master
 
-        # myframe = Frame(master)
-        # myframe.grid()
-
         self.doc_entry = Entry(master, width=50)
         self.doc_entry.grid(row=0, column=1, pady=10, padx=10)
 
@@ -59,7 +56,6 @@ class Gui1:
 
         self.doc_entry.bind("<KeyRelease>", self.clicker)
         self.doc_list.bind("<<ListboxSelect>>", self.fill_entry)
-
 
     def fill_entry(self, e):
         if self.doc_list.size() > 0:
@@ -111,4 +107,3 @@ def main(data: main_gui.MainGui, *args):
 
 if __name__ == '__main__':
     main()
-
