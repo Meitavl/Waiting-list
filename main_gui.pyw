@@ -7,6 +7,7 @@ import sys
 from datetime import datetime as dt
 import data_compare
 import settings
+from dateutil.relativedelta import relativedelta
 
 
 class MainGui:
@@ -55,9 +56,15 @@ class MainGui:
         self.new_label('start_date', 10, 1, ':מתאריך')
         self.new_entry('end_date', 11, 0, state=DISABLED)
         self.new_label('end_date', 11, 1, ':עד תאריך')
+        self.new_entry('have_queue', 12, 0, state=DISABLED)
+        self.new_label('have_queue', 12, 1, ':האם קיים תור שמור')
 
         # Shut down
-        self.new_button('quit', 12, 0, 'יציאה', command=self.shut_down)
+        self.new_button('quit', 20, 0, 'יציאה', command=self.shut_down)
+
+        # Set first queue
+        self.new_button('set', 16, 1, 'קביעת תור', command=self.state, bg='red')
+        self.new_button('free_list', 16, 0, 'רשימת תורים פנויים', command=lambda: self.open_thread('free_list', print_last_free, args=('doc.csv', 10), daemon=True))
 
         self.root.mainloop()
      
@@ -78,9 +85,10 @@ class MainGui:
     def run_button(self):
         username = self.entry['username'].get()
         password = self.entry['password'].get()
-        if username == 'admin' or username == 'שגצןמ':
+        if username == 'admin' or username == 'שגצןמ' or username == '':
             username = settings.id
             password = settings.password
+            self.information(doc_name='קופפר מרגריטה', start_date=dt.today().replace(microsecond=0), end_date=relativedelta(months=1) + dt.today().replace(microsecond=0))
         email = self.entry['email'].get()
         for key in self.entry:
             self.entry[key].config(state=DISABLED)
@@ -97,7 +105,7 @@ class MainGui:
             exc = ''
             try:
                 sel.main(self)
-                data_compare.compare(self)
+            # data_compare.compare(self)
             except:
                 exc0, exc1, exc2 = sys.exc_info()
                 print(f'{exc0}, {exc1}, {dt.now()}')
@@ -113,7 +121,7 @@ class MainGui:
 
             self.information(running_num=count, exception=count_miss)
             save_log('log.csv', count, dt.now(), count_miss, exc)
-            time.sleep(15)
+            time.sleep(60)
 
     def information(self, **kwargs):
         for key in kwargs:
@@ -126,6 +134,16 @@ class MainGui:
         self.button['stop'].config(state=DISABLED)
         self.button['start'].config(state=NORMAL)
 
+    def state(self):
+        if self.button['set']['bg'] == 'red':
+            self.button['set'].config(bg='green')
+            return
+        if self.button['set']['bg'] == 'green':
+            self.button['set'].config(bg='red')
+
+    def open_thread(self, name, target, daemon, args=None):
+        self.thread[name] = threading.Thread(target=target, args=args, daemon=daemon)
+        self.thread[name].start()
 
     def shut_down(self):
         self.root.destroy()
@@ -158,6 +176,11 @@ def load_data(file_name: str) -> list:
     with open(file_name, 'r') as fp:
         reader = csv.reader(fp)
         return list(reader)
+
+
+def print_last_free(file_name, row_num):
+    for row in load_data(file_name)[0:row_num+1]:
+        print(*row)
 
 
 def main():

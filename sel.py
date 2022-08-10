@@ -8,7 +8,6 @@ from selenium.webdriver.support import expected_conditions as ec
 import csv
 from datetime import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
-import sys
 
 import gui
 import database
@@ -42,63 +41,72 @@ def data_s(string: str, web_page: webdriver) -> list:
     return doc_name_list
 
 
-def save_time(year: int, month: int, day: webdriver, driver: webdriver, i: int) -> None:
-
-    driver.implicitly_wait(0.5)
+def save_time(year: int, month: int, day: int, driver: webdriver, i=0) -> None:
 
     free_hours = []
 
-    day.click()
-    driver.implicitly_wait(0.1)
+    driver.implicitly_wait(0.5)
 
     # Morning calender
     WebDriverWait(driver, 20).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]')))
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[1]').click()
     mor_hours = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
     for hour in mor_hours:
-        free_hours.append(hour)
+        free_hours.append(hour.text)
 
     # Noon calender
-
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[2]').click()
     noon_hours = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')
     for hour in noon_hours:
-        free_hours.append(hour)
-
+        free_hours.append(hour.text)
 
     # Evening calender
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div[3]').click()
     ev_hours = driver.find_elements(By.XPATH, '//*[@id="btnsConatiner"]/button')  # Hours
     for hour in ev_hours:
-        free_hours.append(hour)
+        free_hours.append(hour.text)
 
-    # free_hours[0].click()
-    # driver.find_element(By.XPATH,
-    #                     '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[2]/button[1]').click()
-    # driver.find_element(By.XPATH,
-    #                     '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[5]/button[1]').click()
+    month_queue(free_hours, i, year, month, day)
 
 
-    month_queue(year, month, int(day.text), free_hours, i)
+# def create_sql_table(name: str) -> database.Db:
+#     db = database.Db()
+#     db.create_table(name)
+#     return db
 
 
-def create_sql_table(name: str) -> database.Db:
-    db = database.Db()
-    db.create_table(name)
-    return db
+def month_queue(hours: list, i: int, *args) ->None:
 
-
-def month_queue(hours: list, *args: int,  i: int) ->None:
-
-    with open('doc.csv', 'a', newline="", encoding='utf-8') as f:
-        writer = csv.writer(f)
-        if i == 1:
+    if i == 1:
+        with open('doc.csv', 'w', newline="", encoding='utf-8') as f:
+            writer = csv.writer(f)
             writer.writerow(('שנה', 'חודש', 'יום', 'שעה'))
+            for hour in hours:
+                tup = args + (hour,)
+                writer.writerow(tup)
+    else:
+        with open('doc.csv', 'a', newline="", encoding='utf-8') as f:
+            writer = csv.writer(f)
+            for hour in hours:
+                tup = args + (hour,)
+                writer.writerow(tup)
+                # db.insert_to_table(tup)
 
-        for hour in hours:
-            tup = tuple(list(args).append(hour))
-            writer.writerow(tup)
-            # db.insert_to_table(tup)
+
+def have_queue(driver: webdriver, doc_name):
+    driver.find_element(By.XPATH, '/html/body/div/div/div[1]/div/div/div[4]/button').click()
+    driver.find_element(By.XPATH, '//*[@id="app"]/div/div/div/div/div[2]/div[2]/div/ul/li[1]/a/div').click()
+    # time.sleep(3)
+    WebDriverWait(driver, 10).until(ec.invisibility_of_element((By.XPATH, '//*[@id="globalOpacityContainer"]')))
+    driver.find_element(By.XPATH, '//*[@id="ctl00_ctl00_MainPlaceHolder_Body_wcHomeUserPersonalNavMenu_rptUserPersonalMenu_ctl00_imgOuter"]').click()
+    driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[2]/div/div/nav/div/div[2]/div/div[2]/div/div[3]/div[2]/li[1]/a').click()
+    tmp = driver.find_element(By.PARTIAL_LINK_TEXT, doc_name).location
+    if tmp['y'] < 300:
+        driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div/div[1]/div[1]/div[2]/span/span[1]').click()
+    elif tmp['y'] < 400:
+        driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div/div[2]/div[1]/div[2]/span/span[1]').click()
+    driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[7]/button[1]').click()
+    # חזרה לריצה רגילה
 
 
 def main(gui_main: main_gui.MainGui) -> None:
@@ -116,7 +124,7 @@ def main(gui_main: main_gui.MainGui) -> None:
     s = Service(ChromeDriverManager().install())
     options = webdriver.ChromeOptions()
     options.add_argument("--window-size=3840,2160")  # Changing Chrome window size for seeing all buttons
-    options.add_argument("--window-position=-10000,0")  # Position to working in the background
+    # options.add_argument("--window-position=-10000,0")  # Position to working in the background
     driver = webdriver.Chrome(service=s, options=options)
     driver.get(login_page)
 
@@ -154,13 +162,23 @@ def main(gui_main: main_gui.MainGui) -> None:
         data_s(gui_main.entry['doc_name'].get(), driver)
 
     driver.find_element(By.XPATH, '// *[ @ id = "SearchButton"]').click()
-    WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a')))
-    driver.find_element(By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a').click()
+    # WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a')))
+    # driver.find_element(By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a').click()
+    tmp = driver.find_elements(By.XPATH, '//*[@id="app"]/div/div/div/div/div[2]/div[3]/div[2]/div[2]/div/div')
+    for ind in range(len(tmp)):
+        if 'אשדוד' in tmp[ind].text:
+            i = ind + 1
+    driver.find_element(By.XPATH, f'//*[@id="app"]/div/div/div/div/div[2]/div[3]/div[2]/div[2]/div/div[{i}]/div[2]/div[4]/a').click()
     # TODO if have queue
-    if driver.find_element(By.XPATH, '/html/body/div[2]/div/div[1]/div/div/div[4]/button').is_displayed():
-        #  have queue function
-        pass
-    WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button')))
+    try:
+        driver.find_element(By.CSS_SELECTOR, 'body > div > div > div.modal.fade.show > div > div > div.modal-footer > button').click()
+        gui_main.information(have_queue='כן')
+        have_queue(driver, gui_main.entry['doc_name'].get())
+    except ec.NoSuchElementException:
+        gui_main.information(have_queue='לא')
+    #     #  have queue function
+
+    WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button')))
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button').click()
     driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/button').click()
 
@@ -168,68 +186,55 @@ def main(gui_main: main_gui.MainGui) -> None:
 
     # db = create_sql_table('macc')  # Open sql table (not needed, only for practice)
 
-    for i in range(1, 13):
-        month = driver.find_element(By.XPATH, '//div[@class="DayPicker-Caption"]')
+    date = driver.find_element(By.XPATH, '//div[@class="DayPicker-Caption"]')
+    year = re.findall('[0-9]+', date.text)[0]
+    month = re.findall('[א-ת]+', date.text)[0]
+    month = heb_to_eng[month]
 
-        year = re.findall('[0-9]+', month.text)[0]
-        month = re.findall('[א-ת]+', month.text)[0]
-        month = heb_to_eng[month]
-        date = dt.strptime(f'{year}/{str(month)}/1', '%Y/%m/%d')
-        end_date = dt.strptime(gui_main.entry['end_date'].get(), '%Y-%m-%d %H:%M:%S')
-        if (date.year > end_date.year) or (date.month > end_date.month and date.year == end_date.year):
-            break
+    # WebDriverWait(driver, 2).until(ec.element_to_be_clickable((By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available DayPicker-Day--selected"]') ))
+    day = driver.find_element(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available DayPicker-Day--selected"]')
+    date = dt.strptime(f'{year}/{str(month)}/{day.text}', '%Y/%m/%d')
+    start_date = dt.strptime(gui_main.entry['start_date'].get(), '%Y-%m-%d %H:%M:%S')
+    end_date = dt.strptime(gui_main.entry['end_date'].get(), '%Y-%m-%d %H:%M:%S')
+    if start_date <= date <= end_date and gui_main.button['set']['bg'] == 'green':  # If date in range set queue
+        new_queue = driver.find_element(By.XPATH, '//*[@id="btnsConatiner"]/button').click()
+        print(date.date(), new_queue.text)
+        driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[3]/div/div[2]/div[2]/button[1]').click()
+        driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[5]/button[1]').click()
 
-        free_days = []
+    elif date <= end_date:
 
-        try:
-            doc_calender = driver.find_element(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available DayPicker-Day--selected"]')
-            free_days.append(doc_calender)
-            date = dt.strptime(f'{year}/{str(month)}/{day.text}', '%Y/%m/%d')
+        j = 1
+        for i in range(1, 13):
+            if date > end_date:
+                break
+            free_days = []
+            try:
 
+                date = driver.find_element(By.XPATH, '//div[@class="DayPicker-Caption"]')
+                year = re.findall('[0-9]+', date.text)[0]
+                month = re.findall('[א-ת]+', date.text)[0]
+                month = heb_to_eng[month]
 
-            doc_calender1 = driver.find_elements(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available"]')
-            free_days.extend(doc_calender1)
-
-            for day in free_days:
+                day = driver.find_element(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available DayPicker-Day--selected"]')
                 date = dt.strptime(f'{year}/{str(month)}/{day.text}', '%Y/%m/%d')
-                if date > end_date:
-                    break
-                save_time(date.year, date.month, day, driver, i)
+                save_time(date.year, date.month, date.day, driver, j)
+                j += 1
 
-        except ec.NoSuchElementException:
-            print(f' There is no avalibale day in {date.month} {date.year}')
-        driver.implicitly_wait(2)
-        driver.find_element(By.XPATH, '//span[@class="DayPicker-NavButton DayPicker-NavButton--next"]').click() # Next month
+                doc_calender1 = driver.find_elements(By.XPATH, '//div[@class="DayPicker-Day DayPicker-Day--available"]')
+                free_days.extend(doc_calender1)
+
+                for day in free_days:
+                    date = dt.strptime(f'{year}/{str(month)}/{day.text}', '%Y/%m/%d')
+                    if date > end_date:
+                        break
+                    day.click()
+                    save_time(date.year, date.month, date.day, driver)
+
+            except ec.NoSuchElementException:
+                print(f' There is no avalibale day in {date.month} {date.year}')
+            driver.implicitly_wait(2)
+            driver.find_element(By.XPATH, '//span[@class="DayPicker-NavButton DayPicker-NavButton--next"]').click() # Next month
 
     driver.close()
-
-
-    # os.remove('userdata.csv')
-
-
-if __name__ == '__main__':
-    count_miss = 0
-    count = 0
-    while True:
-        exc = ''
-        try:
-            main()
-        except:
-            exc = sys.exc_info()
-            print(exc[0])
-            exc = exc[0]
-            print(f'Problem with program {dt.now()}')
-
-            count_miss += 1
-        break_time = 600  # Running app every 10 minutes
-        count += 1
-        with open('log.csv', 'a') as f:
-            writer = csv.writer(f)
-            if count == 1:
-                heading = ('Count', 'Time', 'Count miss', 'Exception')
-                writer.writerow(heading)
-            tup = (count, dt.now(), count_miss, exc)
-            writer.writerow(tup)
-        time.sleep(break_time)  # Running app every 10 minutes
-
 

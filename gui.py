@@ -35,7 +35,6 @@ class Gui1:
 
         start_date = dt.datetime.fromisoformat(str(self.date_start.get_date()))
         end_date = dt.datetime.fromisoformat(str(self.date_end.get_date()))
-
         data.information(doc_name=self.doc_entry.get(), start_date=start_date, end_date=end_date)
 
         self.master.destroy()
