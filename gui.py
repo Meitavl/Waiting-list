@@ -48,8 +48,8 @@ class Gui1:
         self.doc_list.delete(0, END)
         if len(data):
             for item in data:
-                if self.doc_entry.get() in item:
-                    self.doc_list.insert(END, item)
+                # if self.doc_entry.get() in item:
+                self.doc_list.insert(END, item)
 
     def binding(self):
 

@@ -5,7 +5,6 @@ import threading
 import csv
 import sys
 from datetime import datetime as dt
-import data_compare
 import settings
 from dateutil.relativedelta import relativedelta
 
@@ -58,6 +57,8 @@ class MainGui:
         self.new_label('end_date', 11, 1, ':עד תאריך')
         self.new_entry('have_queue', 12, 0, state=DISABLED)
         self.new_label('have_queue', 12, 1, ':האם קיים תור שמור')
+        self.new_entry('queue', 13, 0, state=DISABLED)
+        self.new_label('queue', 13, 1, ':תור שמור')
 
         # Shut down
         self.new_button('quit', 20, 0, 'יציאה', command=self.shut_down)
@@ -76,7 +77,7 @@ class MainGui:
         self.button[name] = Button(self.root, width=30, text=text)
         for key in kwargs:
             self.button[name][key] = kwargs[key]
-        self.button[name].grid(row=row, column=col, columnspan=1)
+        self.button[name].grid(row=row, column=col, padx=3, pady=3, columnspan=1)
         
     def new_label(self, name, row, col, text):
         self.label[name] = Label(self.root, width=30, text=text)
@@ -88,7 +89,7 @@ class MainGui:
         if username == 'admin' or username == 'שגצןמ' or username == '':
             username = settings.id
             password = settings.password
-            self.information(doc_name='קופפר מרגריטה', start_date=dt.today().replace(microsecond=0), end_date=relativedelta(months=1) + dt.today().replace(microsecond=0))
+            # self.information(doc_name='קופפר מרגריטה', start_date=dt.today().replace(microsecond=0), end_date=relativedelta(months=1) + dt.today().replace(microsecond=0))
         email = self.entry['email'].get()
         for key in self.entry:
             self.entry[key].config(state=DISABLED)
@@ -105,7 +106,7 @@ class MainGui:
             exc = ''
             try:
                 sel.main(self)
-            # data_compare.compare(self)
+
             except:
                 exc0, exc1, exc2 = sys.exc_info()
                 print(f'{exc0}, {exc1}, {dt.now()}')
@@ -121,7 +122,7 @@ class MainGui:
 
             self.information(running_num=count, exception=count_miss)
             save_log('log.csv', count, dt.now(), count_miss, exc)
-            time.sleep(60)
+            time.sleep(10)
 
     def information(self, **kwargs):
         for key in kwargs:
