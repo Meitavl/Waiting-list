@@ -175,8 +175,8 @@ def main(gui_main: main_gui.MainGui) -> None:
 
     doc_name = gui_main.entry['doc_name'].get()
     driver.find_element(By.XPATH, '// *[ @ id = "SearchButton"]').click()
-    # WebDriverWait(driver, 4).until(ec.element_to_be_clickable((By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a')))
-    # driver.find_element(By.CSS_SELECTOR, '#app > div > div > div > div > div.container.bgNone.infoPage > div.row.padding0Mobile.pageBreak.mitkan > div > div.col-md-6.docPropInnerWrap > div.disNonePrint.noFixed > div > a').click()
+
+    # Choosing doc office
     tmp = driver.find_elements(By.XPATH, '//*[@id="app"]/div/div/div/div/div[2]/div[3]/div')
     time.sleep(0.5)
     for ind in range(len(tmp)):
@@ -186,9 +186,17 @@ def main(gui_main: main_gui.MainGui) -> None:
         driver.find_element(By.XPATH, '//*[@id="app"]/div/div/div/div/div[2]/div[3]/div/div[4]/div[4]/div/a').click()
     if i == 2:
         tmp = driver.find_elements(By.XPATH, f'//*[@id="app"]/div/div/div/div/div[2]/div[3]/div[2]/div[2]/div/div')
-        choose = dcg.ChooseGui(tmp, driver)
-
-        i = choose.doc_index
+        address = gui_main.entry['address'].get()
+        if address == '':
+            choose = dcg.ChooseGui(tmp, driver)
+            i = choose.doc_index
+            address = tmp[i-1].text.splitlines()
+            address = address[address.index('כתובת') + 1]
+            gui_main.information(address=address)
+        else:
+            for ind in range(len(tmp)):
+                if address in tmp[ind].text:
+                    i = ind + 1
         driver.find_element(By.XPATH, f'//*[@id="app"]/div/div/div/div/div[2]/div[3]/div[2]/div[2]/div/div[{i}]/div[2]/div[4]/a').click()
     # TODO if have queue
     try:
@@ -198,18 +206,17 @@ def main(gui_main: main_gui.MainGui) -> None:
         return
     except ec.NoSuchElementException:
         gui_main.information(have_queue='לא')
-    #     #  have queue function
+
     check_queue(driver, gui_main)
 
 
 def check_queue(driver, gui_main):
     try:
         driver.implicitly_wait(3)
-        # WebDriverWait(driver, 3).until(ec.element_to_be_clickable((By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button')))
         driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/button').click()
         driver.find_element(By.XPATH, '//*[@id="app-wrap"]/div/div[3]/div/div[1]/div[2]/div[1]/div[2]/div[2]/div/div[2]/div/div[1]/button').click()
     except:
-        print('not needed for this doc')
+        print('')
     driver.implicitly_wait(2)
 
     date = driver.find_element(By.XPATH, '//div[@class="DayPicker-Caption"]')
